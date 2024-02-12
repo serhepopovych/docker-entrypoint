@@ -1,0 +1,42 @@
+This is docker-entrypoint.sh intended, as it's name suggests, to run
+application(s) in docker container. It can run as container init
+process with PID 1 or supervised by another init manager (e.g. PM2
+for NodeJS ecosystem).
+
+It's capabilities currently include following:
+
+  1. Delivering signals to the main process it started
+
+  2. Monitor main process and any explicitly declared for such
+     supplementary processes, resuming them in cast of SIGSTOP
+
+  3. Terminate main process, it's child processes running in
+     same process group and any explicitly declared for
+     monitoring supplementary processes
+
+  4. Proxy standard output and error using named pipe optionally
+     (e.g. to provide /dev/stdout and /dev/stderr that can be
+     (re)opened as regular files to processes it runs; note that
+     PM2 provides UNIX domain sockets to processes it runs that
+     cannot be (re)opened through /dev/stdout and /dev/stderr)
+
+  5. Proxy syslogd messages from /dev/log and optional
+     alternative sockets to standard output with small limitations
+
+It uses job control mechanism provided by most of modern shell
+interpreters such as dash(1), mksh(1) and bash(1). Has lightweight
+sleep implementation mechanism that does not depend on external
+process (e.g. sleep(1) utility) and uses wait(1) for asynchronous
+signals processing, which is only command (and builtin) that can
+be interrupted at any time. See bash(1) manual page for SIGNALS
+section for details on asynchronous signal processing with wait(1).
+
+It is written to be compatible with any shell that supports job
+control, however will fallback to bash(1) in case of standard
+input is not a TTY because dash(1) job control heavily depends
+on it. Other shells may also depend on being a part of controling
+TTY foreground process gorup, thus fallback to bash(1) desired.
+
+Project was emerged as part of docker-host project. See it's repo
+at https://github.com/serhepopovych/docker-host, especially for
+sftp and nginx containers for details on possible usage.
